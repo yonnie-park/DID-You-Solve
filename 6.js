@@ -1,41 +1,73 @@
-function solution(maps) {
-  const ROW = maps.length;
-  const COL = maps[0].length;
-  
-  // 상, 하, 좌, 우 이동 방향
-  const dr = [-1, 1, 0, 0];
-  const dc = [0, 0, -1, 1];
-  
-  // 시작점 (1, 1), 도착점 (ROW, COL)
-  const start = [0, 0];
-  const dest = [ROW-1, COL-1];
-  
-  // 방문 여부를 저장하는 배열
-  const visited = Array.from({length: ROW}, () => Array(COL).fill(false));
-  
-  // BFS를 위한 큐와 시작점을 큐에 추가
-  const queue = [[start[0], start[1], 1]];
-  visited[start[0]][start[1]] = true;
-  
-  // BFS 수행
-  while (queue.length) {
-    const [row, col, count] = queue.shift();
-    
-    if (row === dest[0] && col === dest[1]) {
-      return count;
-    }
-    
-    for (let i = 0; i < 4; i++) {
-      const nr = row + dr[i];
-      const nc = col + dc[i];
-      
-      if (nr >= 0 && nr < ROW && nc >= 0 && nc < COL && maps[nr][nc] === 1 && !visited[nr][nc]) {
-        visited[nr][nc] = true;
-        queue.push([nr, nc, count + 1]);
-      }
+function solution(v, q) {
+  const n = v.length;
+  const tree = buildTree(v);
+  const results = [];
+
+  for (let i = 0; i < q.length; i++) {
+    const [a, b, c] = q[i];
+
+    if (a === 1) {
+      const sum = getSum(tree, b, c, 1, 0, n - 1);
+      results.push(sum);
+    } else if (a === 2) {
+      const diff = c - v[b];
+      v[b] = c;
+      updateTree(tree, 1, 0, n - 1, b, diff);
     }
   }
-  
-  // 도착점에 도달할 수 없는 경우
-  return -1;
+
+  return results;
+}
+
+function buildTree(v) {
+  const n = v.length;
+  const tree = new Array(n * 4);
+
+  const init = (node, nodeStart, nodeEnd) => {
+    if (nodeStart === nodeEnd) {
+      tree[node] = v[nodeStart];
+      return;
+    }
+
+    const mid = Math.floor((nodeStart + nodeEnd) / 2);
+    init(node * 2, nodeStart, mid);
+    init(node * 2 + 1, mid + 1, nodeEnd);
+    tree[node] = tree[node * 2] + tree[node * 2 + 1];
+  };
+
+  init(1, 0, n - 1);
+
+  return tree;
+}
+
+function getSum(tree, start, end, node, nodeStart, nodeEnd) {
+  if (nodeStart > end || nodeEnd < start) {
+    return 0;
+  }
+
+  if (nodeStart >= start && nodeEnd <= end) {
+    return tree[node];
+  }
+
+  const mid = Math.floor((nodeStart + nodeEnd) / 2);
+  const left = getSum(tree, start, end, node * 2, nodeStart, mid);
+  const right = getSum(tree, start, end, node * 2 + 1, mid + 1, nodeEnd);
+
+  return left + right;
+}
+
+function updateTree(tree, node, nodeStart, nodeEnd, index, diff) {
+  if (nodeStart > index || nodeEnd < index) {
+    return;
+  }
+
+  tree[node] += diff;
+
+  if (nodeStart === nodeEnd) {
+    return;
+  }
+
+  const mid = Math.floor((nodeStart + nodeEnd) / 2);
+  updateTree(tree, node * 2, nodeStart, mid, index, diff);
+  updateTree(tree, node * 2 + 1, mid + 1, nodeEnd, index, diff);
 }
