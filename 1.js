@@ -16,7 +16,7 @@ function countPrimeTriplets(numbers) {
       for (let k = j + 1; k < numbers.length; k++) {
         const sum = numbers[i] + numbers[j] + numbers[k];
 
-        if (isPrime) {
+        if (isPrime(sum)) {
           count++;
         }
       }
